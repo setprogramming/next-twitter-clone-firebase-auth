@@ -1,16 +1,19 @@
 import { EmojiHappyIcon, PhotographIcon, XIcon } from "@heroicons/react/outline"
-import {useSession, signOut} from "next-auth/react"
 import { useState, useRef } from "react"
 import { db, storage } from "../firebase"
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore"
 import { getDownloadURL, uploadString, ref } from "firebase/storage"
+import { useRecoilState } from "recoil"
+import { userState } from "../atom/userAtom"
+import { signOut, getAuth } from "firebase/auth"
 
-export default function Input() { 
-    const {data: session} = useSession() 
+export default function Input() {     
     const [input, setInput] = useState("")
+    const [currentUser, setCurrentUser] = useRecoilState(userState)
     const [selectedFile, setSelectedFile] = useState(null)
     const [loading, setLoading] = useState(false)
     const filePickerRef = useRef(null)
+    const auth = getAuth()
 
     const sendPost = async () => {
         if(loading) return
@@ -18,12 +21,12 @@ export default function Input() {
         setLoading(true)
 
         const docRef = await addDoc(collection(db, "posts"), {
-            id: session.user.uid,
+            id: currentUser.uid,
             text: input,
-            userImg: session.user.image,
+            userImg: currentUser.userImg,
             timestamp: serverTimestamp(),
-            name: session.user.name,
-            username: session.user.username,
+            name: currentUser.name,
+            username: currentUser.username,
         })
 
         const imageRef = ref(storage, `posts/${docRef.id}/image`)
@@ -56,13 +59,18 @@ export default function Input() {
 
     }
 
+    function onSignOut() {
+        signOut(auth)
+        setCurrentUser(null)
+    }
+
   return (
     <>
-        {session && (
+        {currentUser && (
             <div className="flex border-b border-gray-200 p-3 space-x-3">
             <img 
-                onClick={signOut}
-                src={session.user.image} alt="profile-picture" 
+                onClick={onSignOut}
+                src={currentUser?.userImg} alt="profile-picture" 
                 className="h-10 w-10 rounded-full xl:mr-2 cursor-pointer" 
             />
             <div className="w-full divide-y divide-gray-200">

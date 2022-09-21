@@ -1,8 +1,11 @@
 import {db} from "../../firebase"
 import {getAuth, signInWithPopup, GoogleAuthProvider} from "firebase/auth"
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
+import { useRouter } from "next/router"
 
 export default function Signin() {
+    const router = useRouter()
+
     const onGoogleClick = async() => {
         try {
             const auth = getAuth()
@@ -22,6 +25,8 @@ export default function Signin() {
                     timestamp: serverTimestamp()
                 })
             }
+
+            router.push("/")
         } catch (error) {
             console.log(error)
         }
